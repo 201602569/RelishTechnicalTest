@@ -7,6 +7,7 @@ import {
   getPhotos, 
   getPhotoById 
 } from '../services/api.service';  // Ajusta la ruta a tu archivo de servicio
+import { getEnrichedPhoto } from '../controllers/api.controller';
 
 const router = express.Router();
 
@@ -65,5 +66,8 @@ router.get('/photos/:id', async (req, res) => {
     res.status(500).json({ message: `Error fetching photo with ID ${req.params.id}` });
   }
 });
+
+// Ruta para obtener la foto enriquecida con información adicional
+router.get('/externalapi/photos/:id', getEnrichedPhoto);
 
 export default router;

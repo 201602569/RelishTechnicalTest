@@ -7,7 +7,7 @@ import {
   getPhotos, 
   getPhotoById 
 } from '../services/api.service';  // Asegúrate de que la ruta sea correcta a tu archivo de servicio
-
+import { getEnrichedPhotoData } from '../services/photo.service';
 // Controlador para obtener todos los usuarios
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
@@ -73,3 +73,18 @@ export const getPhoto = async (req: Request, res: Response) => {
     res.status(500).json({ message: `Error fetching photo with ID ${req.params.id}` });
   }
 };
+
+export const getEnrichedPhoto = async (req: Request, res: Response) => {
+    const photoId = parseInt(req.params.id);
+  
+    try {
+      // Llamar al servicio para obtener los datos enriquecidos
+      const enrichedData = await getEnrichedPhotoData(photoId);
+  
+      // Devolver la respuesta enriquecida
+      res.json(enrichedData);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Error al obtener los datos.');
+    }
+  };
