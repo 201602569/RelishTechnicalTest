@@ -6,8 +6,17 @@ interface FilterOptions {
   userEmail?: string;
 }
 
-export const getFilteredAndEnrichedPhotos = async (filters: FilterOptions) => {
+interface PaginationOptions {
+  limit?: number;
+  offset?: number;
+}
+
+export const getFilteredAndEnrichedPhotos = async (filters: FilterOptions, pagination: PaginationOptions) => {
   try {
+    // Establecer valores predeterminados para limit y offset
+    const limit = pagination.limit || 25;
+    const offset = pagination.offset || 0;
+
     // Fetch all photos
     const photoResponse = await axios.get('https://jsonplaceholder.typicode.com/photos');
     let photos = photoResponse.data;
@@ -35,16 +44,28 @@ export const getFilteredAndEnrichedPhotos = async (filters: FilterOptions) => {
       const albumResponse = await axios.get('https://jsonplaceholder.typicode.com/albums');
       const albums = albumResponse.data;
 
-      // Filter photos by user email
+      // Buscar el usuario por el email
+      const userResponse = await axios.get('https://jsonplaceholder.typicode.com/users');
+      const users = userResponse.data;
+      const user = users.find((user: any) => user.email.toLowerCase() === filters.userEmail?.toLowerCase());
+
+      if (!user) {
+        return [];  // No hay fotos para este usuario
+      }
+
+      // Filtrar álbumes por el usuario
       const userAlbums = albums.filter((album: any) =>
-        album.userId === 1
+        album.userId === user.id
       );
 
       const userAlbumIds = userAlbums.map((album: any) => album.id);
       photos = photos.filter((photo: any) => userAlbumIds.includes(photo.albumId));
     }
 
-    // Enrich data with album and user info
+    // Paginación: Limitar los resultados de acuerdo al límite y desplazamiento
+    photos = photos.slice(offset, offset + limit);
+
+    // Enriquecer datos con información de álbum y usuario
     const enrichedPhotos = await Promise.all(photos.map(async (photo: any) => {
       const album = await axios.get(`https://jsonplaceholder.typicode.com/albums/${photo.albumId}`);
       const user = await axios.get(`https://jsonplaceholder.typicode.com/users/${album.data.userId}`);

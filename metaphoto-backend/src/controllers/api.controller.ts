@@ -3,7 +3,9 @@ import { getFilteredAndEnrichedPhotos } from '../services/photo.service';
 
 export const getFilteredPhotos = async (req: Request, res: Response) => {
   const filters: { title?: string, albumTitle?: string, userEmail?: string } = {};
-
+  const limit = req.query.limit ? parseInt(req.query.limit.toString()) : 25;
+  const offset = req.query.offset ? parseInt(req.query.offset.toString()) : 0;
+  const pagination = { limit, offset };
   if (req.query.title) {
     filters.title = req.query.title as string;
   }
@@ -17,7 +19,7 @@ export const getFilteredPhotos = async (req: Request, res: Response) => {
   }
 
   try {
-    const filteredPhotos = await getFilteredAndEnrichedPhotos(filters);
+    const filteredPhotos = await getFilteredAndEnrichedPhotos(filters,pagination);
     res.json(filteredPhotos);
   } catch (error) {
     console.error(error);
