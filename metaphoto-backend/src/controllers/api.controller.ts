@@ -1,90 +1,26 @@
 import { Request, Response } from 'express';
-import { 
-  getUsers, 
-  getUserById, 
-  getAlbums, 
-  getAlbumById, 
-  getPhotos, 
-  getPhotoById 
-} from '../services/api.service';  // Asegúrate de que la ruta sea correcta a tu archivo de servicio
-import { getEnrichedPhotoData } from '../services/photo.service';
-// Controlador para obtener todos los usuarios
-export const getAllUsers = async (req: Request, res: Response) => {
+import { getFilteredAndEnrichedPhotos } from '../services/photo.service';
+
+export const getFilteredPhotos = async (req: Request, res: Response) => {
+  const filters: { title?: string, albumTitle?: string, userEmail?: string } = {};
+
+  if (req.query.title) {
+    filters.title = req.query.title as string;
+  }
+
+  if (req.query['album.title']) {
+    filters.albumTitle = req.query['album.title'] as string;
+  }
+
+  if (req.query['album.user.email']) {
+    filters.userEmail = req.query['album.user.email'] as string;
+  }
+
   try {
-    const users = await getUsers();
-    res.json(users);
+    const filteredPhotos = await getFilteredAndEnrichedPhotos(filters);
+    res.json(filteredPhotos);
   } catch (error) {
-    console.error('Error fetching users:', error);
-    res.status(500).json({ message: 'Error fetching users' });
+    console.error(error);
+    res.status(500).send('Error while filtering photos');
   }
 };
-
-// Controlador para obtener un usuario específico
-export const getUser = async (req: Request, res: Response) => {
-  try {
-    const user = await getUserById(Number(req.params.id));  // Extrae el ID de los parámetros
-    res.json(user);
-  } catch (error) {
-    console.error(`Error fetching user with ID ${req.params.id}:`, error);
-    res.status(500).json({ message: `Error fetching user with ID ${req.params.id}` });
-  }
-};
-
-// Controlador para obtener todos los álbumes
-export const getAllAlbums = async (req: Request, res: Response) => {
-  try {
-    const albums = await getAlbums();
-    res.json(albums);
-  } catch (error) {
-    console.error('Error fetching albums:', error);
-    res.status(500).json({ message: 'Error fetching albums' });
-  }
-};
-
-// Controlador para obtener un álbum específico
-export const getAlbum = async (req: Request, res: Response) => {
-  try {
-    const album = await getAlbumById(Number(req.params.id));  // Extrae el ID de los parámetros
-    res.json(album);
-  } catch (error) {
-    console.error(`Error fetching album with ID ${req.params.id}:`, error);
-    res.status(500).json({ message: `Error fetching album with ID ${req.params.id}` });
-  }
-};
-
-// Controlador para obtener todas las fotos
-export const getAllPhotos = async (req: Request, res: Response) => {
-  try {
-    const photos = await getPhotos();
-    res.json(photos);
-  } catch (error) {
-    console.error('Error fetching photos:', error);
-    res.status(500).json({ message: 'Error fetching photos' });
-  }
-};
-
-// Controlador para obtener una foto específica
-export const getPhoto = async (req: Request, res: Response) => {
-  try {
-    const photo = await getPhotoById(Number(req.params.id));  // Extrae el ID de los parámetros
-    res.json(photo);
-  } catch (error) {
-    console.error(`Error fetching photo with ID ${req.params.id}:`, error);
-    res.status(500).json({ message: `Error fetching photo with ID ${req.params.id}` });
-  }
-};
-
-export const getEnrichedPhoto = async (req: Request, res: Response) => {
-    const photoId = parseInt(req.params.id);
-  
-    try {
-      // Llamar al servicio para obtener los datos enriquecidos
-      const enrichedData = await getEnrichedPhotoData(photoId);
-  
-      // Devolver la respuesta enriquecida
-      res.json(enrichedData);
-    } catch (error) {
-      console.error(error);
-      res.status(500).send('Error al obtener los datos.');
-    }
-  };

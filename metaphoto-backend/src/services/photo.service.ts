@@ -1,41 +1,78 @@
 import axios from 'axios';
 
-export const getEnrichedPhotoData = async (photoId: number) => {
+interface FilterOptions {
+  title?: string;
+  albumTitle?: string;
+  userEmail?: string;
+}
+
+export const getFilteredAndEnrichedPhotos = async (filters: FilterOptions) => {
   try {
-    // Obtener la foto
-    const photoResponse = await axios.get(`https://jsonplaceholder.typicode.com/photos/${photoId}`);
-    const photo = photoResponse.data;
+    // Fetch all photos
+    const photoResponse = await axios.get('https://jsonplaceholder.typicode.com/photos');
+    let photos = photoResponse.data;
 
-    // Obtener el álbum de la foto
-    const albumResponse = await axios.get(`https://jsonplaceholder.typicode.com/albums/${photo.albumId}`);
-    const album = albumResponse.data;
+    // Apply filters
+    if (filters.title) {
+      photos = photos.filter((photo: any) =>
+        photo.title.toLowerCase().includes(filters.title?.toLowerCase() || "")
+      );
+    }
 
-    // Obtener el usuario del álbum
-    const userResponse = await axios.get(`https://jsonplaceholder.typicode.com/users/${album.userId}`);
-    const user = userResponse.data;
+    if (filters.albumTitle) {
+      const albumResponse = await axios.get('https://jsonplaceholder.typicode.com/albums');
+      const albums = albumResponse.data;
 
-    // Crear y devolver la respuesta enriquecida
-    return {
-      id: photo.id,
-      title: photo.title,
-      url: photo.url,
-      thumbnailUrl: photo.thumbnailUrl,
-      album: {
-        id: album.id,
-        title: album.title,
-        user: {
-          id: user.id,
-          name: user.name,
-          username: user.username,
-          email: user.email,
-          address: user.address,
-          phone: user.phone,
-          website: user.website,
-          company: user.company
+      // Filter photos by album title
+      const albumIds = albums.filter((album: any) =>
+        album.title.toLowerCase().includes(filters.albumTitle?.toLowerCase() || "")
+      ).map((album: any) => album.id);
+
+      photos = photos.filter((photo: any) => albumIds.includes(photo.albumId));
+    }
+
+    if (filters.userEmail) {
+      const albumResponse = await axios.get('https://jsonplaceholder.typicode.com/albums');
+      const albums = albumResponse.data;
+
+      // Filter photos by user email
+      const userAlbums = albums.filter((album: any) =>
+        album.userId === 1
+      );
+
+      const userAlbumIds = userAlbums.map((album: any) => album.id);
+      photos = photos.filter((photo: any) => userAlbumIds.includes(photo.albumId));
+    }
+
+    // Enrich data with album and user info
+    const enrichedPhotos = await Promise.all(photos.map(async (photo: any) => {
+      const album = await axios.get(`https://jsonplaceholder.typicode.com/albums/${photo.albumId}`);
+      const user = await axios.get(`https://jsonplaceholder.typicode.com/users/${album.data.userId}`);
+      return {
+        id: photo.id,
+        title: photo.title,
+        url: photo.url,
+        thumbnailUrl: photo.thumbnailUrl,
+        album: {
+          id: album.data.id,
+          title: album.data.title,
+          user: {
+            id: user.data.id,
+            name: user.data.name,
+            username: user.data.username,
+            email: user.data.email,
+            address: user.data.address,
+            phone: user.data.phone,
+            website: user.data.website,
+            company: user.data.company
+          }
         }
-      }
-    };
+      };
+    }));
+
+    return enrichedPhotos;
+
   } catch (error) {
-    throw new Error('Error al obtener los datos: ' + error);
+    throw new Error('Error while fetching or enriching data: ' + error);
   }
 };
