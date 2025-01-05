@@ -3,6 +3,7 @@ import apiRoutes from './routes/api.routes';
 import cors from 'cors';
 const app = express();
 const port = Number(process.env.PORT) || 3000
+const baseurl = Number(process.env.PUBLIC_URL) || "http://0.0.0.0"
 
 app.use(express.json()); 
 app.use(cors());
@@ -14,5 +15,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(port, '0.0.0.0', () => {
-  console.log(`Server is running on http://0.0.0.0:${port}`);
+  console.log(`Server is running on ${baseurl}:${port}`);
 });
