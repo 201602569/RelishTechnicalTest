@@ -271,7 +271,7 @@ const PhotoList: React.FC = () => {
         ))}
       </Grid>
 
-      <Box display="flex" justifyContent="space-between" marginTop="20px">
+      <Box display="flex" justifyContent="space-between" marginTop="40px">
         <Button
           onClick={handlePreviousPage}
           disabled={filters.offset === 0}
