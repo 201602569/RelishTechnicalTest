@@ -13,7 +13,7 @@ interface PaginationOptions {
 
 export const getFilteredAndEnrichedPhotos = async (filters: FilterOptions, pagination: PaginationOptions) => {
   try {
-    // Establecer valores predeterminados para limit y offset
+    // limit y offset default values
     const limit = pagination.limit || 25;
     const offset = pagination.offset || 0;
 
@@ -44,16 +44,16 @@ export const getFilteredAndEnrichedPhotos = async (filters: FilterOptions, pagin
       const albumResponse = await axios.get('https://jsonplaceholder.typicode.com/albums');
       const albums = albumResponse.data;
 
-      // Buscar el usuario por el email
+      // search the user by email
       const userResponse = await axios.get('https://jsonplaceholder.typicode.com/users');
       const users = userResponse.data;
       const user = users.find((user: any) => user.email.toLowerCase() === filters.userEmail?.toLowerCase());
 
       if (!user) {
-        return [];  // No hay fotos para este usuario
+        return [];  
       }
 
-      // Filtrar álbumes por el usuario
+      // filter albums by user
       const userAlbums = albums.filter((album: any) =>
         album.userId === user.id
       );
@@ -62,10 +62,10 @@ export const getFilteredAndEnrichedPhotos = async (filters: FilterOptions, pagin
       photos = photos.filter((photo: any) => userAlbumIds.includes(photo.albumId));
     }
 
-    // Paginación: Limitar los resultados de acuerdo al límite y desplazamiento
+    // pagination
     photos = photos.slice(offset, offset + limit);
 
-    // Enriquecer datos con información de álbum y usuario
+    // create the final return with all the data
     const enrichedPhotos = await Promise.all(photos.map(async (photo: any) => {
       const album = await axios.get(`https://jsonplaceholder.typicode.com/albums/${photo.albumId}`);
       const user = await axios.get(`https://jsonplaceholder.typicode.com/users/${album.data.userId}`);
